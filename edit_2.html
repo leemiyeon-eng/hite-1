@@ -1,0 +1,1971 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>네이버 스마트에디터 클론</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/font-nanum@1.0.0/css/nabaeunpungcha.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/font-nanum@1.0.0/css/nanum.css" rel="stylesheet">
+  <style>
+    /* 기본 스타일 */
+    :root {
+      --naver-green: #03c75a;
+      --toolbar-bg: #f5f5f5;
+      --border-color: #e5e5e5;
+      --hover-color: #f0f0f0;
+      --text-color: #333;
+    }
+    
+    body {
+      font-family: 'Nanum Gothic', sans-serif;
+      color: var(--text-color);
+    }
+    
+    /* 에디터 헤더 스타일 */
+    .se-header {
+      background-color: var(--toolbar-bg);
+      border-bottom: 1px solid var(--border-color);
+    }
+    
+    .se-toolbar {
+      list-style: none;
+      display: flex;
+      flex-wrap: wrap;
+      padding: 0;
+      margin: 0;
+    }
+    
+    .se-toolbar-item {
+      position: relative;
+      margin: 0 1px;
+    }
+    
+    .se-toolbar-button {
+      background: transparent;
+      border: none;
+      padding: 8px 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      min-width: 24px;
+      border-radius: 4px;
+      transition: all 0.2s;
+    }
+    
+    .se-toolbar-button:hover {
+      background-color: var(--hover-color);
+    }
+    
+    .se-toolbar-icon {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      margin-right: 4px;
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+    }
+    
+    .se-toolbar-label {
+      white-space: nowrap;
+    }
+    
+    .se-toolbar-tooltip {
+      display: none;
+      position: absolute;
+      bottom: -28px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #333;
+      color: white;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      white-space: nowrap;
+      z-index: 10;
+    }
+    
+    .se-toolbar-button:hover .se-toolbar-tooltip {
+      display: block;
+    }
+    
+    /* 드롭다운 스타일 */
+    .se-dropdown {
+      position: relative;
+    }
+    
+    .se-dropdown-content {
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      background-color: white;
+      min-width: 160px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      z-index: 1000;
+      border-radius: 4px;
+      padding: 8px 0;
+    }
+    
+    .se-dropdown.active .se-dropdown-content {
+      display: block;
+    }
+    
+    .se-dropdown-item {
+      padding: 8px 16px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    
+    .se-dropdown-item:hover {
+      background-color: var(--hover-color);
+    }
+    
+    /* 에디터 본문 스타일 */
+    .se-editor-container {
+      border: 1px solid var(--border-color);
+      border-top: none;
+      min-height: 500px;
+      background-color: white;
+    }
+    
+    .se-editor {
+      margin: 0 auto;
+      max-width: 800px;
+      padding: 20px;
+      min-height: 500px;
+    }
+    
+    /* 네이버 에디터 스타일 */
+    .se-components-wrap {
+      position: relative;
+    }
+    
+    .se-component {
+      position: relative;
+      margin-bottom: 20px;
+    }
+    
+    .se-component-content {
+      position: relative;
+    }
+    
+    .se-section {
+      position: relative;
+    }
+    
+    .se-text-paragraph {
+      margin: 0;
+      padding: 0;
+    }
+    
+    .se-section-align-left {
+      text-align: left;
+    }
+    
+    .se-section-align-center {
+      text-align: center;
+    }
+    
+    .se-section-align-right {
+      text-align: right;
+    }
+    
+    .se-section-align-justify {
+      text-align: justify;
+    }
+    
+    /* 폰트 패밀리 스타일 */
+    .se-ff-nanumgothic {
+      font-family: 'Nanum Gothic', sans-serif;
+    }
+    
+    .se-ff-nanummyeongjo {
+      font-family: 'Nanum Myeongjo', serif;
+    }
+    
+    .se-ff-nanumbarungothic {
+      font-family: 'Nanum Barun Gothic', sans-serif;
+    }
+    
+    .se-ff-nanumsquare {
+      font-family: 'Nanum Square', sans-serif;
+    }
+    
+    .se-ff-nanummaruburi {
+      font-family: 'Nanum Brush Script', cursive;
+    }
+    
+    .se-ff-nanumdasisijaghae {
+      font-family: 'Nanum Pen Script', cursive;
+    }
+    
+    .se-ff-nanumbareunhipi {
+      font-family: 'Nanum Gothic Coding', monospace;
+    }
+    
+    .se-ff-nanumuriddalsongeulssi {
+      font-family: 'Nanum Barun Gothic', sans-serif;
+    }
+    
+    .se-ff-system {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    }
+    
+    /* 폰트 크기 스타일 */
+    .se-fs11 { font-size: 11px; }
+    .se-fs13 { font-size: 13px; }
+    .se-fs15 { font-size: 15px; }
+    .se-fs16 { font-size: 16px; }
+    .se-fs19 { font-size: 19px; }
+    .se-fs24 { font-size: 24px; }
+    .se-fs26 { font-size: 26px; }
+    .se-fs30 { font-size: 30px; }
+    .se-fs32 { font-size: 32px; }
+    
+    /* 제목 컴포넌트 */
+    .se-documentTitle {
+      margin-bottom: 24px;
+    }
+    
+    .se-title-text {
+      font-weight: bold;
+    }
+    
+    /* 인용구 스타일 */
+    .se-quotation-container {
+      padding: 12px 0;
+    }
+    
+    .se-quote {
+      margin-bottom: 10px;
+    }
+    
+    .se-cite {
+      margin-top: 5px;
+      color: #777;
+    }
+    
+    .se-l-quotation_line {
+      border-left: 4px solid var(--naver-green);
+      padding-left: 16px;
+    }
+    
+    .se-l-quotation_bubble {
+      background-color: #f5f5f5;
+      border-radius: 8px;
+      padding: 15px;
+    }
+    
+    .se-l-quotation_underline {
+      border-bottom: 1px solid #ddd;
+      padding-bottom: 15px;
+    }
+    
+    .se-l-quotation_postit {
+      background-color: #fff9c4;
+      padding: 15px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    
+    .se-l-quotation_corner {
+      background-color: #f5f5f5;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: 15px;
+    }
+    
+    /* 구분선 스타일 */
+    .se-horizontalLine {
+      text-align: center;
+      margin: 20px 0;
+    }
+    
+    .se-hr {
+      border: 0;
+      height: 1px;
+      background-color: #eee;
+      margin: 0;
+    }
+    
+    .se-l-line1 .se-hr { height: 1px; background-color: #000; }
+    .se-l-line2 .se-hr { height: 2px; background-color: #000; }
+    .se-l-line3 .se-hr { border-top: 1px dashed #000; height: 0; }
+    .se-l-line4 .se-hr { border-top: 1px dotted #000; height: 0; }
+    .se-l-line5 .se-hr { height: 1px; background-color: #ddd; }
+    .se-l-line6 .se-hr { height: 2px; background-color: #ddd; }
+    .se-l-line7 .se-hr { border-top: 1px dashed #ddd; height: 0; }
+    
+    /* 목록 스타일 */
+    .se-text-list {
+      padding-left: 24px;
+      margin: 10px 0;
+    }
+    
+    .se-text-list-item {
+      margin: 5px 0;
+    }
+    
+    .se-text-list-type-bullet-disc {
+      list-style-type: disc;
+    }
+    
+    .se-text-list-type-decimal {
+      list-style-type: decimal;
+    }
+    
+    /* 드롭캡 스타일 */
+    .se-text-paragraph-drop-cap .se-drop-cap {
+      float: left;
+      font-size: 3em;
+      line-height: 0.9;
+      margin-right: 0.1em;
+    }
+    
+    /* 버튼 컨트롤 */
+    .se-component-button {
+      position: absolute;
+      display: none;
+      z-index: 10;
+      background-color: rgba(0,0,0,0.6);
+      color: white;
+      border: none;
+      border-radius: 4px;
+      padding: 4px 8px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    
+    .se-component:hover .se-component-button {
+      display: block;
+    }
+    
+    .se-set-rep-image-button {
+      top: 5px;
+      left: 5px;
+    }
+    
+    .se-image-delete-button {
+      bottom: 5px;
+      right: 5px;
+    }
+    
+    /* 이미지 컴포넌트 */
+    .se-section-image {
+      text-align: center;
+      margin: 15px 0;
+    }
+    
+    .se-image-resource {
+      max-width: 100%;
+      vertical-align: top;
+    }
+    
+    .se-caption {
+      margin-top: 8px;
+      font-size: 13px;
+      color: #555;
+    }
+    
+    /* 테이블 스타일 */
+    .se-table-container {
+      position: relative;
+      width: 100%;
+      overflow: auto;
+    }
+    
+    .se-table-content {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    
+    .se-cell {
+      border: 1px solid #ddd;
+      padding: 8px;
+      vertical-align: top;
+    }
+    
+    /* 태그 스타일 */
+    .placeholder {
+      color: #999;
+    }
+    
+    /* 속성 툴바 */
+    .se-property-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      padding: 5px 0;
+      border-top: 1px solid var(--border-color);
+    }
+    
+    /* 포맷팅 스타일 */
+    .se-format-toolbar {
+      display: none;
+      position: absolute;
+      top: -40px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: white;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: 5px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      z-index: 1000;
+    }
+    
+    .se-format-button {
+      background: transparent;
+      border: none;
+      width: 28px;
+      height: 28px;
+      border-radius: 4px;
+      margin: 0 2px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .se-format-button:hover {
+      background-color: var(--hover-color);
+    }
+    
+    /* 상태 메시지 */
+    .se-status {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background-color: rgba(0,0,0,0.7);
+      color: white;
+      padding: 8px 16px;
+      border-radius: 4px;
+      display: none;
+      z-index: 9999;
+    }
+    
+    /* 지도 컴포넌트 */
+    .se-placesMap {
+      margin-bottom: 20px;
+    }
+    
+    .se-module-map-image img {
+      max-width: 100%;
+      border-radius: 4px;
+    }
+    
+    .se-map-info {
+      margin-top: 10px;
+    }
+    
+    /* 일정 컴포넌트 */
+    .se-schedule {
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      margin-bottom: 20px;
+    }
+    
+    .se-schedule-header {
+      display: flex;
+      padding: 12px;
+      background-color: #f9f9f9;
+      border-bottom: 1px solid #eee;
+    }
+    
+    .se-schedule-summary {
+      flex: 1;
+    }
+    
+    .se-schedule-date-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 60px;
+      height: 60px;
+      border-radius: 4px;
+      background-color: var(--naver-green);
+      color: white;
+      text-align: center;
+    }
+    
+    .se-schedule-content {
+      padding: 12px;
+    }
+    
+    /* 선택 관련 스타일 */
+    ::selection {
+      background-color: rgba(3, 199, 90, 0.2);
+    }
+    
+    .se-is-selected {
+      outline: 2px solid var(--naver-green);
+    }
+    
+    /* 플레이스홀더 */
+    .se-placeholder {
+      color: #999;
+    }
+    
+    /* 라인 높이 */
+    [style*="line-height: 1.5;"] { line-height: 1.5 !important; }
+    [style*="line-height: 1.6;"] { line-height: 1.6 !important; }
+    [style*="line-height: 1.8;"] { line-height: 1.8 !important; }
+    [style*="line-height: 1.9;"] { line-height: 1.9 !important; }
+    [style*="line-height: 2;"] { line-height: 2 !important; }
+    [style*="line-height: 2.1;"] { line-height: 2.1 !important; }
+    
+    /* 컬러 피커 */
+    .se-color-picker {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      z-index: 1000;
+      background-color: white;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      display: none;
+    }
+    
+    .se-color-picker.active {
+      display: block;
+    }
+    
+    .se-color-swatch {
+      width: 20px;
+      height: 20px;
+      border-radius: 4px;
+      margin: 2px;
+      cursor: pointer;
+      border: 1px solid #ddd;
+      display: inline-block;
+    }
+    
+    .se-color-swatch:hover {
+      transform: scale(1.1);
+    }
+    
+    /* 아이콘 스타일 */
+    .icon-text-bold { background-image: url('https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/icons/type-bold.svg'); }
+    .icon-text-italic { background-image: url('https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/icons/type-italic.svg'); }
+    .icon-text-underline { background-image: url('https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/icons/type-underline.svg'); }
+    .icon-text-strikethrough { background-image: url('https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/icons/type-strikethrough.svg'); }
+    .icon-text-color { background-image: url('https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/icons/palette-fill.svg'); }
+    .icon-align-left { background-image: url('https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/icons/text-left.svg'); }
+    .icon-align-center { background-image: url('https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/icons/text-center.svg'); }
+    .icon-align-right { background-image: url('https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/icons/text-right.svg'); }
+    .icon-align-justify { background-image: url('https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/icons/justify.svg'); }
+    .icon-list-ul { background-image: url('https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/icons/list-ul.svg'); }
+    .icon-list-ol { background-image: url('https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/icons/list-ol.svg'); }
+    .icon-image { background-image: url('https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/icons/image.svg'); }
+    .icon-link { background-image: url('https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/icons/link.svg'); }
+    .icon-table { background-image: url('https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/icons/table.svg'); }
+    .icon-quote { background-image: url('https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/icons/blockquote-left.svg'); }
+    .icon-line { background-image: url('https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/icons/hr.svg'); }
+    .icon-code { background-image: url('https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/icons/code-slash.svg'); }
+    .icon-undo { background-image: url('https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/icons/arrow-counterclockwise.svg'); }
+    .icon-redo { background-image: url('https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/icons/arrow-clockwise.svg'); }
+    .icon-more { background-image: url('https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/icons/three-dots.svg'); }
+    .icon-map { background-image: url('https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/icons/geo-alt-fill.svg'); }
+    .icon-calendar { background-image: url('https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/icons/calendar-event.svg'); }
+    .icon-file { background-image: url('https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/icons/file-earmark.svg'); }
+    .icon-video { background-image: url('https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/icons/film.svg'); }
+    .icon-sticker { background-image: url('https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/icons/emoji-smile.svg'); }
+    .icon-formula { background-image: url('https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/icons/calculator.svg'); }
+    
+    /* 키보드 단축키 안내 */
+    .se-keyboard-shortcuts {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 20px rgba(0,0,0,0.15);
+      padding: 20px;
+      width: 400px;
+      max-width: 90vw;
+      z-index: 9999;
+      display: none;
+    }
+    
+    .se-keyboard-shortcuts.active {
+      display: block;
+    }
+    
+    .se-shortcut-item {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    
+    .se-shortcut-key {
+      background-color: #f5f5f5;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: 2px 6px;
+      font-family: monospace;
+      font-size: 12px;
+    }
+    
+    .se-modal-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(0,0,0,0.5);
+      z-index: 9998;
+      display: none;
+    }
+    
+    .se-modal-backdrop.active {
+      display: block;
+    }
+    
+    /* 이미지 업로드 모달 */
+    .se-image-upload {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 20px rgba(0,0,0,0.15);
+      padding: 20px;
+      width: 400px;
+      max-width: 90vw;
+      z-index: 9999;
+      display: none;
+    }
+    
+    .se-image-upload.active {
+      display: block;
+    }
+    
+    .se-upload-dropzone {
+      border: 2px dashed #ddd;
+      border-radius: 4px;
+      padding: 20px;
+      text-align: center;
+      margin: 10px 0;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .se-upload-dropzone:hover {
+      border-color: var(--naver-green);
+      background-color: rgba(3, 199, 90, 0.05);
+    }
+    
+    .se-upload-dropzone.dragover {
+      border-color: var(--naver-green);
+      background-color: rgba(3, 199, 90, 0.1);
+    }
+    
+    #file-input {
+      display: none;
+    }
+    
+    /* 툴바 반응형 처리 */
+    @media (max-width: 768px) {
+      .se-toolbar-label {
+        display: none;
+      }
+      
+      .se-toolbar-icon {
+        margin-right: 0;
+      }
+      
+      .se-toolbar-button {
+        padding: 8px;
+      }
+    }
+  </style>
+</head>
+<body class="bg-gray-100">
+  <div class="container mx-auto max-w-5xl bg-white shadow-md min-h-screen">
+    <!-- 에디터 헤더 (툴바) -->
+    <header class="se-header se-header-type-basic">
+      <!-- 문서 툴바 (이미지, 동영상, 인용구 등 삽입) -->
+      <div class="se-header-inbox se-l-document-toolbar">
+        <ul class="se-toolbar se-document-toolbar">
+          <li class="se-toolbar-item se-toolbar-item-image">
+            <button type="button" class="se-toolbar-button" id="btn-image">
+              <span class="se-toolbar-icon icon-image"></span>
+              <span class="se-toolbar-label">사진</span>
+              <span class="se-toolbar-tooltip">사진 추가</span>
+            </button>
+          </li>
+          <li class="se-toolbar-item se-toolbar-item-social-media-image">
+            <button type="button" class="se-toolbar-button" id="btn-mybox">
+              <span class="se-toolbar-icon icon-file"></span>
+              <span class="se-toolbar-label">MYBOX</span>
+              <span class="se-toolbar-tooltip">MYBOX 추가</span>
+            </button>
+          </li>
+          <li class="se-toolbar-item se-toolbar-item-video">
+            <button type="button" class="se-toolbar-button" id="btn-video">
+              <span class="se-toolbar-icon icon-video"></span>
+              <span class="se-toolbar-label">동영상</span>
+              <span class="se-toolbar-tooltip">동영상 추가</span>
+            </button>
+          </li>
+          <li class="se-toolbar-item se-toolbar-item-sticker">
+            <button type="button" class="se-toolbar-button" id="btn-sticker">
+              <span class="se-toolbar-icon icon-sticker"></span>
+              <span class="se-toolbar-label">스티커</span>
+              <span class="se-toolbar-tooltip">스티커 추가</span>
+            </button>
+          </li>
+          <li class="se-toolbar-item se-toolbar-item-insert-quotation">
+            <div class="se-dropdown">
+              <button type="button" class="se-toolbar-button se-dropdown-toggle" id="btn-quote">
+                <span class="se-toolbar-icon icon-quote"></span>
+                <span class="se-toolbar-label">인용구</span>
+                <span class="se-toolbar-tooltip">인용구 추가</span>
+              </button>
+              <div class="se-dropdown-content">
+                <div class="se-dropdown-item" data-quote-type="quotation_line">인용구 스타일 1</div>
+                <div class="se-dropdown-item" data-quote-type="quotation_bubble">인용구 스타일 2</div>
+                <div class="se-dropdown-item" data-quote-type="quotation_underline">인용구 스타일 3</div>
+                <div class="se-dropdown-item" data-quote-type="quotation_postit">인용구 스타일 4</div>
+                <div class="se-dropdown-item" data-quote-type="quotation_corner">인용구 스타일 5</div>
+              </div>
+            </div>
+          </li>
+          <li class="se-toolbar-item se-toolbar-item-insert-horizontal-line">
+            <div class="se-dropdown">
+              <button type="button" class="se-toolbar-button se-dropdown-toggle" id="btn-line">
+                <span class="se-toolbar-icon icon-line"></span>
+                <span class="se-toolbar-label">구분선</span>
+                <span class="se-toolbar-tooltip">구분선 추가</span>
+              </button>
+              <div class="se-dropdown-content">
+                <div class="se-dropdown-item" data-line-type="line1">구분선 스타일 1</div>
+                <div class="se-dropdown-item" data-line-type="line2">구분선 스타일 2</div>
+                <div class="se-dropdown-item" data-line-type="line3">구분선 스타일 3</div>
+                <div class="se-dropdown-item" data-line-type="line4">구분선 스타일 4</div>
+                <div class="se-dropdown-item" data-line-type="line5">구분선 스타일 5</div>
+                <div class="se-dropdown-item" data-line-type="line6">구분선 스타일 6</div>
+                <div class="se-dropdown-item" data-line-type="line7">구분선 스타일 7</div>
+              </div>
+            </div>
+          </li>
+          <li class="se-toolbar-item se-toolbar-item-map">
+            <button type="button" class="se-toolbar-button" id="btn-map">
+              <span class="se-toolbar-icon icon-map"></span>
+              <span class="se-toolbar-label">장소</span>
+              <span class="se-toolbar-tooltip">장소 추가</span>
+            </button>
+          </li>
+          <li class="se-toolbar-item se-toolbar-item-oglink">
+            <button type="button" class="se-toolbar-button" id="btn-link">
+              <span class="se-toolbar-icon icon-link"></span>
+              <span class="se-toolbar-label">링크</span>
+              <span class="se-toolbar-tooltip">링크 추가</span>
+            </button>
+          </li>
+          <li class="se-toolbar-item se-toolbar-item-file">
+            <button type="button" class="se-toolbar-button" id="btn-file">
+              <span class="se-toolbar-icon icon-file"></span>
+              <span class="se-toolbar-label">파일</span>
+              <span class="se-toolbar-tooltip">파일 추가</span>
+            </button>
+          </li>
+          <li class="se-toolbar-item se-toolbar-item-schedule">
+            <button type="button" class="se-toolbar-button" id="btn-schedule">
+              <span class="se-toolbar-icon icon-calendar"></span>
+              <span class="se-toolbar-label">일정</span>
+              <span class="se-toolbar-tooltip">일정 추가</span>
+            </button>
+          </li>
+          <li class="se-toolbar-item se-toolbar-item-code">
+            <button type="button" class="se-toolbar-button" id="btn-code">
+              <span class="se-toolbar-icon icon-code"></span>
+              <span class="se-toolbar-label">소스코드</span>
+              <span class="se-toolbar-tooltip">소스코드 추가</span>
+            </button>
+          </li>
+          <li class="se-toolbar-item se-toolbar-item-table">
+            <button type="button" class="se-toolbar-button" id="btn-table">
+              <span class="se-toolbar-icon icon-table"></span>
+              <span class="se-toolbar-label">표</span>
+              <span class="se-toolbar-tooltip">표 추가</span>
+            </button>
+          </li>
+          <li class="se-toolbar-item se-toolbar-item-formula">
+            <button type="button" class="se-toolbar-button" id="btn-formula">
+              <span class="se-toolbar-icon icon-formula"></span>
+              <span class="se-toolbar-label">수식</span>
+              <span class="se-toolbar-tooltip">수식 추가</span>
+            </button>
+          </li>
+        </ul>
+      </div>
+      <!-- 속성 툴바 (폰트, 크기, 정렬 등) -->
+      <div class="se-header-inbox se-l-property-toolbar">
+        <ul class="se-toolbar se-property-toolbar">
+          <li class="se-toolbar-item se-toolbar-item-font-family">
+            <div class="se-dropdown">
+              <button type="button" class="se-toolbar-button se-dropdown-toggle" id="btn-font-family">
+                <span class="se-toolbar-label">나눔고딕</span>
+                <span class="se-toolbar-tooltip">서체 변경</span>
+              </button>
+              <div class="se-dropdown-content">
+                <div class="se-dropdown-item" data-font="se-ff-nanumgothic">나눔고딕</div>
+                <div class="se-dropdown-item" data-font="se-ff-nanummyeongjo">나눔명조</div>
+                <div class="se-dropdown-item" data-font="se-ff-nanumbarungothic">나눔바른고딕</div>
+                <div class="se-dropdown-item" data-font="se-ff-nanumsquare">나눔스퀘어</div>
+                <div class="se-dropdown-item" data-font="se-ff-nanummaruburi">나눔마루부리</div>
+                <div class="se-dropdown-item" data-font="se-ff-nanumdasisijaghae">나눔다시시작해</div>
+                <div class="se-dropdown-item" data-font="se-ff-nanumbareunhipi">나눔바른히피</div>
+                <div class="se-dropdown-item" data-font="se-ff-nanumuriddalsongeulssi">나눔손글씨</div>
+                <div class="se-dropdown-item" data-font="se-ff-system">시스템 폰트</div>
+              </div>
+            </div>
+          </li>
+          <li class="se-toolbar-item se-toolbar-item-font-size">
+            <div class="se-dropdown">
+              <button type="button" class="se-toolbar-button se-dropdown-toggle" id="btn-font-size">
+                <span class="se-toolbar-label">15px</span>
+                <span class="se-toolbar-tooltip">글자 크기 변경</span>
+              </button>
+              <div class="se-dropdown-content">
+                <div class="se-dropdown-item" data-font-size="se-fs11">11px</div>
+                <div class="se-dropdown-item" data-font-size="se-fs13">13px</div>
+                <div class="se-dropdown-item" data-font-size="se-fs15">15px</div>
+                <div class="se-dropdown-item" data-font-size="se-fs16">16px</div>
+                <div class="se-dropdown-item" data-font-size="se-fs19">19px</div>
+                <div class="se-dropdown-item" data-font-size="se-fs24">24px</div>
+                <div class="se-dropdown-item" data-font-size="se-fs26">26px</div>
+                <div class="se-dropdown-item" data-font-size="se-fs30">30px</div>
+                <div class="se-dropdown-item" data-font-size="se-fs32">32px</div>
+              </div>
+            </div>
+          </li>
+          <li class="se-toolbar-item se-toolbar-item-separator-bar">
+            <div class="se-separator-bar"></div>
+          </li>
+          <li class="se-toolbar-item se-toolbar-item-text-bold">
+            <button type="button" class="se-toolbar-button" id="btn-bold">
+              <span class="se-toolbar-icon icon-text-bold"></span>
+              <span class="se-toolbar-tooltip">굵게 (Ctrl+B)</span>
+            </button>
+          </li>
+          <li class="se-toolbar-item se-toolbar-item-text-italic">
+            <button type="button" class="se-toolbar-button" id="btn-italic">
+              <span class="se-toolbar-icon icon-text-italic"></span>
+              <span class="se-toolbar-tooltip">기울임 (Ctrl+I)</span>
+            </button>
+          </li>
+          <li class="se-toolbar-item se-toolbar-item-text-underline">
+            <button type="button" class="se-toolbar-button" id="btn-underline">
+              <span class="se-toolbar-icon icon-text-underline"></span>
+              <span class="se-toolbar-tooltip">밑줄 (Ctrl+U)</span>
+            </button>
+          </li>
+          <li class="se-toolbar-item se-toolbar-item-text-strike">
+            <button type="button" class="se-toolbar-button" id="btn-strike">
+              <span class="se-toolbar-icon icon-text-strikethrough"></span>
+              <span class="se-toolbar-tooltip">취소선</span>
+            </button>
+          </li>
+          <li class="se-toolbar-item se-toolbar-item-text-color">
+            <button type="button" class="se-toolbar-button" id="btn-text-color">
+              <span class="se-toolbar-icon icon-text-color"></span>
+              <span class="se-toolbar-tooltip">글자색</span>
+            </button>
+            <div class="se-color-picker" id="text-color-picker">
+              <div class="se-color-swatch" style="background-color: #000000;" data-color="#000000"></div>
+              <div class="se-color-swatch" style="background-color: #666666;" data-color="#666666"></div>
+              <div class="se-color-swatch" style="background-color: #999999;" data-color="#999999"></div>
+              <div class="se-color-swatch" style="background-color: #CCCCCC;" data-color="#CCCCCC"></div>
+              <div class="se-color-swatch" style="background-color: #FFFFFF; border: 1px solid #EEEEEE;" data-color="#FFFFFF"></div>
+              <div class="se-color-swatch" style="background-color: #FF0000;" data-color="#FF0000"></div>
+              <div class="se-color-swatch" style="background-color: #FF9900;" data-color="#FF9900"></div>
+              <div class="se-color-swatch" style="background-color: #FFFF00;" data-color="#FFFF00"></div>
+              <div class="se-color-swatch" style="background-color: #00FF00;" data-color="#00FF00"></div>
+              <div class="se-color-swatch" style="background-color: #00FFFF;" data-color="#00FFFF"></div>
+              <div class="se-color-swatch" style="background-color: #0000FF;" data-color="#0000FF"></div>
+              <div class="se-color-swatch" style="background-color: #9900FF;" data-color="#9900FF"></div>
+              <div class="se-color-swatch" style="background-color: #FF00FF;" data-color="#FF00FF"></div>
+              <div class="se-color-swatch" style="background-color: #00BFB5;" data-color="#00BFB5"></div>
+              <div class="se-color-swatch" style="background-color: #03C75A;" data-color="#03C75A"></div>
+            </div>
+          </li>
+          <li class="se-toolbar-item se-toolbar-item-separator-bar">
+            <div class="se-separator-bar"></div>
+          </li>
+          <li class="se-toolbar-item se-toolbar-item-align">
+            <div class="se-dropdown">
+              <button type="button" class="se-toolbar-button se-dropdown-toggle" id="btn-align">
+                <span class="se-toolbar-icon icon-align-left"></span>
+                <span class="se-toolbar-tooltip">정렬</span>
+              </button>
+              <div class="se-dropdown-content">
+                <div class="se-dropdown-item" data-align="se-text-paragraph-align-left">
+                  <span class="se-toolbar-icon icon-align-left"></span> 왼쪽 정렬
+                </div>
+                <div class="se-dropdown-item" data-align="se-text-paragraph-align-center">
+                  <span class="se-toolbar-icon icon-align-center"></span> 가운데 정렬
+                </div>
+                <div class="se-dropdown-item" data-align="se-text-paragraph-align-right">
+                  <span class="se-toolbar-icon icon-align-right"></span> 오른쪽 정렬
+                </div>
+                <div class="se-dropdown-item" data-align="se-text-paragraph-align-justify">
+                  <span class="se-toolbar-icon icon-align-justify"></span> 양쪽 정렬
+                </div>
+              </div>
+            </div>
+          </li>
+          <li class="se-toolbar-item se-toolbar-item-list">
+            <div class="se-dropdown">
+              <button type="button" class="se-toolbar-button se-dropdown-toggle" id="btn-list">
+                <span class="se-toolbar-icon icon-list-ul"></span>
+                <span class="se-toolbar-tooltip">목록</span>
+              </button>
+              <div class="se-dropdown-content">
+                <div class="se-dropdown-item" data-list-type="bullet">
+                  <span class="se-toolbar-icon icon-list-ul"></span> 글머리 기호
+                </div>
+                <div class="se-dropdown-item" data-list-type="decimal">
+                  <span class="se-toolbar-icon icon-list-ol"></span> 번호 매기기
+                </div>
+              </div>
+            </div>
+          </li>
+          <li class="se-toolbar-item se-toolbar-item-separator-bar">
+            <div class="se-separator-bar"></div>
+          </li>
+          <li class="se-toolbar-item se-toolbar-item-line-height">
+            <div class="se-dropdown">
+              <button type="button" class="se-toolbar-button se-dropdown-toggle" id="btn-line-height">
+                <span class="se-toolbar-label">줄간격</span>
+                <span class="se-toolbar-tooltip">줄간격 변경</span>
+              </button>
+              <div class="se-dropdown-content">
+                <div class="se-dropdown-item" data-line-height="1.5">줄간격 1.5</div>
+                <div class="se-dropdown-item" data-line-height="1.6">줄간격 1.6</div>
+                <div class="se-dropdown-item" data-line-height="1.8">줄간격 1.8</div>
+                <div class="se-dropdown-item" data-line-height="1.9">줄간격 1.9</div>
+                <div class="se-dropdown-item" data-line-height="2.0">줄간격 2.0</div>
+                <div class="se-dropdown-item" data-line-height="2.1">줄간격 2.1</div>
+              </div>
+            </div>
+          </li>
+          <li class="se-toolbar-item se-toolbar-item-special-char">
+            <button type="button" class="se-toolbar-button" id="btn-special-char">
+              <span class="se-toolbar-label">특수문자</span>
+              <span class="se-toolbar-tooltip">특수문자 추가</span>
+            </button>
+          </li>
+          <li class="se-toolbar-item se-toolbar-item-undo">
+            <button type="button" class="se-toolbar-button" id="btn-undo">
+              <span class="se-toolbar-icon icon-undo"></span>
+              <span class="se-toolbar-tooltip">실행 취소 (Ctrl+Z)</span>
+            </button>
+          </li>
+          <li class="se-toolbar-item se-toolbar-item-redo">
+            <button type="button" class="se-toolbar-button" id="btn-redo">
+              <span class="se-toolbar-icon icon-redo"></span>
+              <span class="se-toolbar-tooltip">다시 실행 (Ctrl+Y)</span>
+            </button>
+          </li>
+        </ul>
+      </div>
+    </header>
+    
+    <!-- 에디터 본문 영역 -->
+    <div class="se-editor-container">
+      <div class="se-editor" id="editor" contenteditable="true">
+        <article class="se-components-wrap">
+          <div class="se-component se-documentTitle se-l-default" id="doc-title" data-a11y-title="제목">
+            <div class="se-component-content">
+              <div draggable="false" class="se-section se-section-documentTitle se-l-default se-section-align-left">
+                <div class="se-module se-module-text se-title-text se-module-fs32-min-height-for-ie">
+                  <p class="se-text-paragraph se-text-paragraph-align-left">
+                    <span class="se-ff-nanumgothic se-fs32" contenteditable="true">제목을 입력하세요</span>
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="se-component se-text se-l-default" data-a11y-title="본문">
+            <div class="se-component-content">
+              <div class="se-section se-section-text se-l-default">
+                <div class="se-module se-module-text">
+                  <p class="se-text-paragraph se-text-paragraph-align-left" style="line-height: 1.8;">
+                    <span class="se-ff-nanumgothic se-fs15" style="color: rgb(0, 0, 0);" contenteditable="true">여기에 본문을 입력하세요.</span>
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </article>
+      </div>
+    </div>
+    
+    <!-- 선택 영역 서식 툴바 -->
+    <div class="se-format-toolbar" id="format-toolbar">
+      <button type="button" class="se-format-button" data-format="bold" title="굵게 (Ctrl+B)">
+        <span class="se-toolbar-icon icon-text-bold"></span>
+      </button>
+      <button type="button" class="se-format-button" data-format="italic" title="기울임 (Ctrl+I)">
+        <span class="se-toolbar-icon icon-text-italic"></span>
+      </button>
+      <button type="button" class="se-format-button" data-format="underline" title="밑줄 (Ctrl+U)">
+        <span class="se-toolbar-icon icon-text-underline"></span>
+      </button>
+      <button type="button" class="se-format-button" data-format="strikethrough" title="취소선">
+        <span class="se-toolbar-icon icon-text-strikethrough"></span>
+      </button>
+    </div>
+    
+    <!-- 이미지 업로드 모달 -->
+    <div class="se-modal-backdrop" id="modal-backdrop"></div>
+    <div class="se-image-upload" id="image-upload-modal">
+      <h3 class="text-lg font-semibold mb-4">이미지 추가</h3>
+      <div class="se-upload-dropzone" id="upload-dropzone">
+        <p>이미지를 여기에 끌어다 놓거나</p>
+        <button type="button" class="bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded mt-2">
+          컴퓨터에서 선택
+        </button>
+        <input type="file" id="file-input" accept="image/*" multiple>
+      </div>
+      <div class="flex justify-end mt-4">
+        <button type="button" class="bg-gray-200 hover:bg-gray-300 py-2 px-4 rounded mr-2" id="btn-close-image-upload">
+          취소
+        </button>
+      </div>
+    </div>
+    
+    <!-- 키보드 단축키 안내 -->
+    <div class="se-keyboard-shortcuts" id="keyboard-shortcuts">
+      <h3 class="text-lg font-semibold mb-4">키보드 단축키</h3>
+      <div class="se-shortcut-item">
+        <div>굵게</div>
+        <div><span class="se-shortcut-key">Ctrl + B</span></div>
+      </div>
+      <div class="se-shortcut-item">
+        <div>기울임</div>
+        <div><span class="se-shortcut-key">Ctrl + I</span></div>
+      </div>
+      <div class="se-shortcut-item">
+        <div>밑줄</div>
+        <div><span class="se-shortcut-key">Ctrl + U</span></div>
+      </div>
+      <div class="se-shortcut-item">
+        <div>실행 취소</div>
+        <div><span class="se-shortcut-key">Ctrl + Z</span></div>
+      </div>
+      <div class="se-shortcut-item">
+        <div>다시 실행</div>
+        <div><span class="se-shortcut-key">Ctrl + Y</span></div>
+      </div>
+      <div class="se-shortcut-item">
+        <div>모두 선택</div>
+        <div><span class="se-shortcut-key">Ctrl + A</span></div>
+      </div>
+      <div class="se-shortcut-item">
+        <div>저장</div>
+        <div><span class="se-shortcut-key">Ctrl + S</span></div>
+      </div>
+      <div class="flex justify-end mt-4">
+        <button type="button" class="bg-gray-200 hover:bg-gray-300 py-2 px-4 rounded" id="btn-close-shortcuts">
+          닫기
+        </button>
+      </div>
+    </div>
+    
+    <!-- 상태 메시지 -->
+    <div class="se-status" id="status-message"></div>
+  </div>
+  
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // 주요 요소
+      const editor = document.getElementById('editor');
+      const formatToolbar = document.getElementById('format-toolbar');
+      const statusMessage = document.getElementById('status-message');
+      const fileInput = document.getElementById('file-input');
+      const modalBackdrop = document.getElementById('modal-backdrop');
+      const imageUploadModal = document.getElementById('image-upload-modal');
+      const uploadDropzone = document.getElementById('upload-dropzone');
+      const keyboardShortcuts = document.getElementById('keyboard-shortcuts');
+      const textColorPicker = document.getElementById('text-color-picker');
+      
+      // 실행 취소/다시 실행을 위한 history 관리
+      let undoStack = [];
+      let redoStack = [];
+      let lastHtml = editor.innerHTML;
+      
+      // 상태 메시지 표시 함수
+      function showStatus(message, duration = 3000) {
+        statusMessage.textContent = message;
+        statusMessage.style.display = 'block';
+        
+        setTimeout(() => {
+          statusMessage.style.display = 'none';
+        }, duration);
+      }
+      
+      // 현재 상태 저장 함수
+      function saveState() {
+        const currentHtml = editor.innerHTML;
+        if (currentHtml !== lastHtml) {
+          undoStack.push(lastHtml);
+          redoStack = [];
+          lastHtml = currentHtml;
+          
+          // 스택 크기 제한
+          if (undoStack.length > 50) {
+            undoStack.shift();
+          }
+        }
+      }
+      
+      // 실행 취소 함수
+      function undo() {
+        if (undoStack.length > 0) {
+          const currentHtml = editor.innerHTML;
+          redoStack.push(currentHtml);
+          lastHtml = undoStack.pop();
+          editor.innerHTML = lastHtml;
+          showStatus('실행 취소됨');
+        } else {
+          showStatus('더 이상 실행 취소할 수 없습니다');
+        }
+      }
+      
+      // 다시 실행 함수
+      function redo() {
+        if (redoStack.length > 0) {
+          const currentHtml = editor.innerHTML;
+          undoStack.push(currentHtml);
+          lastHtml = redoStack.pop();
+          editor.innerHTML = lastHtml;
+          showStatus('다시 실행됨');
+        } else {
+          showStatus('다시 실행할 수 없습니다');
+        }
+      }
+      
+      // 에디터 내용 변경 감지
+      editor.addEventListener('input', saveState);
+      editor.addEventListener('keydown', function(e) {
+        // 실행 취소/다시 실행 단축키
+        if (e.ctrlKey && e.key === 'z') {
+          e.preventDefault();
+          undo();
+        } else if (e.ctrlKey && e.key === 'y') {
+          e.preventDefault();
+          redo();
+        } else if (e.ctrlKey && e.key === 'b') {
+          e.preventDefault();
+          document.execCommand('bold', false, null);
+        } else if (e.ctrlKey && e.key === 'i') {
+          e.preventDefault();
+          document.execCommand('italic', false, null);
+        } else if (e.ctrlKey && e.key === 'u') {
+          e.preventDefault();
+          document.execCommand('underline', false, null);
+        }
+      });
+      
+      // 선택 영역 서식 툴바 관리
+      document.addEventListener('selectionchange', function() {
+        const selection = window.getSelection();
+        
+        if (selection.rangeCount > 0 && !selection.isCollapsed && editor.contains(selection.anchorNode)) {
+          const range = selection.getRangeAt(0);
+          const rect = range.getBoundingClientRect();
+          
+          formatToolbar.style.display = 'flex';
+          formatToolbar.style.top = `${rect.top - formatToolbar.offsetHeight - 10 + window.scrollY}px`;
+          formatToolbar.style.left = `${rect.left + (rect.width / 2) - (formatToolbar.offsetWidth / 2) + window.scrollX}px`;
+        } else {
+          formatToolbar.style.display = 'none';
+        }
+      });
+      
+      // 서식 툴바 버튼 이벤트
+      const formatButtons = formatToolbar.querySelectorAll('.se-format-button');
+      formatButtons.forEach(button => {
+        button.addEventListener('click', function() {
+          const format = this.dataset.format;
+          document.execCommand(format, false, null);
+        });
+      });
+      
+      // 이미지 업로드
+      function handleImageUpload(files) {
+        if (!files || files.length === 0) return;
+        
+        Array.from(files).forEach(file => {
+          if (!file.type.startsWith('image/')) {
+            showStatus('이미지 파일만 업로드할 수 있습니다');
+            return;
+          }
+          
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            const imgSrc = e.target.result;
+            
+            // 네이버 에디터 스타일의 이미지 컴포넌트 HTML 생성
+            const imageHtml = `
+              <div class="se-component se-image se-l-default" data-a11y-title="사진">
+                <div class="se-component-content">
+                  <div class="se-section se-section-image se-l-default se-section-align-center" style="max-width: 400px;">
+                    <div class="se-module se-module-image">
+                      <img src="${imgSrc}" alt="" class="se-image-resource" width="400">
+                      <button type="button" class="se-component-button se-set-rep-image-button">대표</button>
+                      <button type="button" class="se-component-button se-image-delete-button">삭제</button>
+                    </div>
+                    <div class="se-module se-module-text se-caption">
+                      <p class="se-text-paragraph se-text-paragraph-align-center" style="line-height: 1.5;">
+                        <span class="se-ff-nanumgothic se-fs13" style="color: rgb(85, 85, 85);" contenteditable="true">사진 설명을 입력하세요.</span>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            `;
+            
+            // 커서 위치에 이미지 삽입
+            insertAtCursor(imageHtml);
+            saveState();
+          };
+          
+          reader.readAsDataURL(file);
+        });
+        
+        closeImageUploadModal();
+        showStatus(`이미지 ${files.length}개가 추가되었습니다`);
+      }
+      
+      // 파일 선택 이벤트
+      fileInput.addEventListener('change', function(e) {
+        if (this.files && this.files.length > 0) {
+          handleImageUpload(this.files);
+          this.value = ''; // 파일 입력 초기화
+        }
+      });
+      
+      // 드래그 앤 드롭 이벤트
+      uploadDropzone.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        this.classList.add('dragover');
+      });
+      
+      uploadDropzone.addEventListener('dragleave', function(e) {
+        e.preventDefault();
+        this.classList.remove('dragover');
+      });
+      
+      uploadDropzone.addEventListener('drop', function(e) {
+        e.preventDefault();
+        this.classList.remove('dragover');
+        
+        if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+          handleImageUpload(e.dataTransfer.files);
+        }
+      });
+      
+      uploadDropzone.addEventListener('click', function() {
+        fileInput.click();
+      });
+      
+      // 모달 관련 함수
+      function openImageUploadModal() {
+        modalBackdrop.classList.add('active');
+        imageUploadModal.classList.add('active');
+      }
+      
+      function closeImageUploadModal() {
+        modalBackdrop.classList.remove('active');
+        imageUploadModal.classList.remove('active');
+      }
+      
+      // 모달 닫기 버튼
+      document.getElementById('btn-close-image-upload').addEventListener('click', closeImageUploadModal);
+      
+      // 키보드 단축키 모달
+      function toggleKeyboardShortcuts() {
+        if (keyboardShortcuts.classList.contains('active')) {
+          keyboardShortcuts.classList.remove('active');
+          modalBackdrop.classList.remove('active');
+        } else {
+          keyboardShortcuts.classList.add('active');
+          modalBackdrop.classList.add('active');
+        }
+      }
+      
+      document.getElementById('btn-close-shortcuts').addEventListener('click', toggleKeyboardShortcuts);
+      
+      // 드롭다운 토글 함수
+      function toggleDropdown(dropdown) {
+        const allDropdowns = document.querySelectorAll('.se-dropdown');
+        allDropdowns.forEach(d => {
+          if (d !== dropdown) {
+            d.classList.remove('active');
+          }
+        });
+        
+        dropdown.classList.toggle('active');
+      }
+      
+      // 드롭다운 버튼 이벤트
+      const dropdownToggles = document.querySelectorAll('.se-dropdown-toggle');
+      dropdownToggles.forEach(toggle => {
+        toggle.addEventListener('click', function(e) {
+          e.stopPropagation();
+          const dropdown = this.closest('.se-dropdown');
+          toggleDropdown(dropdown);
+        });
+      });
+      
+      // 드롭다운 닫기 (바깥 클릭 시)
+      document.addEventListener('click', function(e) {
+        const allDropdowns = document.querySelectorAll('.se-dropdown');
+        allDropdowns.forEach(dropdown => {
+          if (!dropdown.contains(e.target)) {
+            dropdown.classList.remove('active');
+          }
+        });
+        
+        // 색상 선택기 닫기
+        if (!textColorPicker.contains(e.target) && e.target.id !== 'btn-text-color') {
+          textColorPicker.classList.remove('active');
+        }
+      });
+      
+      // 색상 선택기 토글
+      document.getElementById('btn-text-color').addEventListener('click', function(e) {
+        e.stopPropagation();
+        textColorPicker.classList.toggle('active');
+      });
+      
+      // 색상 선택
+      const colorSwatches = document.querySelectorAll('.se-color-swatch');
+      colorSwatches.forEach(swatch => {
+        swatch.addEventListener('click', function() {
+          const color = this.dataset.color;
+          document.execCommand('foreColor', false, color);
+          textColorPicker.classList.remove('active');
+          saveState();
+        });
+      });
+      
+      // 폰트 변경
+      document.querySelectorAll('[data-font]').forEach(item => {
+        item.addEventListener('click', function() {
+          const fontClass = this.dataset.font;
+          const selection = window.getSelection();
+          
+          if (selection.rangeCount > 0) {
+            const range = selection.getRangeAt(0);
+            const selectedElement = range.commonAncestorContainer;
+            
+            if (selectedElement.nodeType === 1) { // 요소 노드
+              const spanElement = selectedElement.closest('span');
+              if (spanElement) {
+                // 모든 폰트 클래스 제거
+                for (const cls of spanElement.classList) {
+                  if (cls.startsWith('se-ff-')) {
+                    spanElement.classList.remove(cls);
+                  }
+                }
+                // 새 폰트 클래스 추가
+                spanElement.classList.add(fontClass);
+              }
+            } else if (selectedElement.nodeType === 3) { // 텍스트 노드
+              const span = document.createElement('span');
+              span.className = `${fontClass} se-fs15`;
+              
+              const fragment = range.extractContents();
+              span.appendChild(fragment);
+              range.insertNode(span);
+            }
+            
+            saveState();
+          }
+          
+          toggleDropdown(this.closest('.se-dropdown'));
+        });
+      });
+      
+      // 글자 크기 변경
+      document.querySelectorAll('[data-font-size]').forEach(item => {
+        item.addEventListener('click', function() {
+          const fontSizeClass = this.dataset.fontSize;
+          const selection = window.getSelection();
+          
+          if (selection.rangeCount > 0) {
+            const range = selection.getRangeAt(0);
+            const selectedElement = range.commonAncestorContainer;
+            
+            if (selectedElement.nodeType === 1) { // 요소 노드
+              const spanElement = selectedElement.closest('span');
+              if (spanElement) {
+                // 모든 글자 크기 클래스 제거
+                for (const cls of spanElement.classList) {
+                  if (cls.startsWith('se-fs')) {
+                    spanElement.classList.remove(cls);
+                  }
+                }
+                // 새 글자 크기 클래스 추가
+                spanElement.classList.add(fontSizeClass);
+              }
+            } else if (selectedElement.nodeType === 3) { // 텍스트 노드
+              const span = document.createElement('span');
+              // 기존 폰트 클래스 유지
+              const parentSpan = selectedElement.parentElement;
+              let fontClass = 'se-ff-nanumgothic';
+              
+              if (parentSpan && parentSpan.tagName === 'SPAN') {
+                for (const cls of parentSpan.classList) {
+                  if (cls.startsWith('se-ff-')) {
+                    fontClass = cls;
+                    break;
+                  }
+                }
+              }
+              
+              span.className = `${fontClass} ${fontSizeClass}`;
+              
+              const fragment = range.extractContents();
+              span.appendChild(fragment);
+              range.insertNode(span);
+            }
+            
+            saveState();
+          }
+          
+          toggleDropdown(this.closest('.se-dropdown'));
+        });
+      });
+      
+      // 텍스트 정렬
+      document.querySelectorAll('[data-align]').forEach(item => {
+        item.addEventListener('click', function() {
+          const alignClass = this.dataset.align;
+          const selection = window.getSelection();
+          
+          if (selection.rangeCount > 0) {
+            const range = selection.getRangeAt(0);
+            const selectedElement = range.commonAncestorContainer;
+            let paragraphElement;
+            
+            if (selectedElement.nodeType === 1) { // 요소 노드
+              paragraphElement = selectedElement.closest('p');
+            } else if (selectedElement.nodeType === 3) { // 텍스트 노드
+              paragraphElement = selectedElement.parentElement.closest('p');
+            }
+            
+            if (paragraphElement) {
+              // 모든 정렬 클래스 제거
+              for (const cls of paragraphElement.classList) {
+                if (cls.startsWith('se-text-paragraph-align-')) {
+                  paragraphElement.classList.remove(cls);
+                }
+              }
+              // 새 정렬 클래스 추가
+              paragraphElement.classList.add(alignClass);
+              saveState();
+            }
+          }
+          
+          toggleDropdown(this.closest('.se-dropdown'));
+        });
+      });
+      
+      // 줄 간격 변경
+      document.querySelectorAll('[data-line-height]').forEach(item => {
+        item.addEventListener('click', function() {
+          const lineHeight = this.dataset.lineHeight;
+          const selection = window.getSelection();
+          
+          if (selection.rangeCount > 0) {
+            const range = selection.getRangeAt(0);
+            const selectedElement = range.commonAncestorContainer;
+            let paragraphElement;
+            
+            if (selectedElement.nodeType === 1) { // 요소 노드
+              paragraphElement = selectedElement.closest('p');
+            } else if (selectedElement.nodeType === 3) { // 텍스트 노드
+              paragraphElement = selectedElement.parentElement.closest('p');
+            }
+            
+            if (paragraphElement) {
+              paragraphElement.style.lineHeight = lineHeight;
+              saveState();
+            }
+          }
+          
+          toggleDropdown(this.closest('.se-dropdown'));
+        });
+      });
+      
+      // 목록 생성
+      document.querySelectorAll('[data-list-type]').forEach(item => {
+        item.addEventListener('click', function() {
+          const listType = this.dataset.listType;
+          const selection = window.getSelection();
+          
+          if (selection.rangeCount > 0) {
+            const range = selection.getRangeAt(0);
+            const selectedElement = range.commonAncestorContainer;
+            let paragraphElement;
+            
+            if (selectedElement.nodeType === 1) { // 요소 노드
+              paragraphElement = selectedElement.closest('p');
+            } else if (selectedElement.nodeType === 3) { // 텍스트 노드
+              paragraphElement = selectedElement.parentElement.closest('p');
+            }
+            
+            if (paragraphElement) {
+              const parent = paragraphElement.parentElement;
+              let listElement;
+              
+              // 이미 목록인지 확인
+              const existingList = parent.closest('ul, ol');
+              if (existingList) {
+                // 이미 같은 유형의 목록이면 목록 해제
+                if ((listType === 'bullet' && existingList.tagName === 'UL') || 
+                    (listType === 'decimal' && existingList.tagName === 'OL')) {
+                  const content = paragraphElement.innerHTML;
+                  const newParagraph = document.createElement('p');
+                  newParagraph.className = 'se-text-paragraph se-text-paragraph-align-left';
+                  newParagraph.style.lineHeight = '1.8';
+                  newParagraph.innerHTML = content;
+                  
+                  const listItem = paragraphElement.closest('li');
+                  existingList.replaceChild(newParagraph, listItem);
+                } else {
+                  // 다른 유형으로 변경
+                  const newList = document.createElement(listType === 'bullet' ? 'ul' : 'ol');
+                  newList.className = listType === 'bullet' ? 'se-text-list se-text-list-type-bullet-disc' : 'se-text-list se-text-list-type-decimal';
+                  
+                  while (existingList.firstChild) {
+                    newList.appendChild(existingList.firstChild);
+                  }
+                  
+                  existingList.parentElement.replaceChild(newList, existingList);
+                }
+              } else {
+                // 새 목록 생성
+                listElement = document.createElement(listType === 'bullet' ? 'ul' : 'ol');
+                listElement.className = listType === 'bullet' ? 'se-text-list se-text-list-type-bullet-disc' : 'se-text-list se-text-list-type-decimal';
+                
+                const listItem = document.createElement('li');
+                listItem.className = 'se-text-list-item';
+                
+                const content = paragraphElement.innerHTML;
+                const newParagraph = document.createElement('p');
+                newParagraph.className = 'se-text-paragraph se-text-paragraph-align-left';
+                newParagraph.style.lineHeight = paragraphElement.style.lineHeight || '1.8';
+                newParagraph.innerHTML = content;
+                
+                listItem.appendChild(newParagraph);
+                listElement.appendChild(listItem);
+                
+                parent.replaceChild(listElement, paragraphElement);
+              }
+              
+              saveState();
+            }
+          }
+          
+          toggleDropdown(this.closest('.se-dropdown'));
+        });
+      });
+      
+      // 인용구 추가
+      document.querySelectorAll('[data-quote-type]').forEach(item => {
+        item.addEventListener('click', function() {
+          const quoteType = this.dataset.quoteType;
+          
+          const quoteHtml = `
+            <div class="se-component se-quotation se-l-${quoteType}" data-a11y-title="인용구">
+              <div class="se-component-content">
+                <div class="se-section se-section-quotation se-l-${quoteType} se-section-align-left">
+                  <div class="se-quotation-container">
+                    <div class="se-module se-module-text se-quote">
+                      <p class="se-text-paragraph se-text-paragraph-align-left" style="line-height: 1.8;">
+                        <span class="se-ff-nanumbarungothic se-fs19" style="color: rgb(0, 0, 0);" contenteditable="true">인용구 내용을 입력하세요</span>
+                      </p>
+                    </div>
+                    <div class="se-module se-module-text se-cite">
+                      <p class="se-text-paragraph se-text-paragraph-align-left" style="line-height: 1.5;">
+                        <span class="se-ff-nanumgothic se-fs13" style="color: rgb(119, 119, 119);" contenteditable="true">출처를 입력하세요</span>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          `;
+          
+          insertAtCursor(quoteHtml);
+          saveState();
+          toggleDropdown(this.closest('.se-dropdown'));
+        });
+      });
+      
+      // 구분선 추가
+      document.querySelectorAll('[data-line-type]').forEach(item => {
+        item.addEventListener('click', function() {
+          const lineType = this.dataset.lineType;
+          
+          const lineHtml = `
+            <div class="se-component se-horizontalLine se-l-${lineType}" data-a11y-title="구분선">
+              <div class="se-component-content">
+                <div class="se-section se-section-horizontalLine se-l-${lineType} se-section-align-left">
+                  <div class="se-module se-module-horizontalLine">
+                    <span class="se-hr-invisible"></span>
+                    <hr class="se-hr">
+                  </div>
+                </div>
+              </div>
+            </div>
+          `;
+          
+          insertAtCursor(lineHtml);
+          saveState();
+          toggleDropdown(this.closest('.se-dropdown'));
+        });
+      });
+      
+      // 표 추가 기능
+      document.getElementById('btn-table').addEventListener('click', function() {
+        const tableHtml = `
+          <div class="se-component se-table se-l-default" data-a11y-title="표">
+            <div class="se-component-content">
+              <div class="se-section se-section-table se-l-default se-section-align-left" style="width: 100%;">
+                <div class="se-table-container">
+                  <table class="se-table-content">
+                    <tbody>
+                      <tr class="se-tr">
+                        <td class="se-cell" style="width: 33.33%; height: 42px;">
+                          <div class="se-module se-module-text">
+                            <p class="se-text-paragraph se-text-paragraph-align-left" style="line-height: 1.6;">
+                              <span class="se-ff-nanumgothic se-fs15" style="color: rgb(0, 0, 0);" contenteditable="true">내용을 입력하세요</span>
+                            </p>
+                          </div>
+                        </td>
+                        <td class="se-cell" style="width: 33.33%; height: 42px;">
+                          <div class="se-module se-module-text">
+                            <p class="se-text-paragraph se-text-paragraph-align-left" style="line-height: 1.6;">
+                              <span class="se-ff-nanumgothic se-fs15" style="color: rgb(0, 0, 0);" contenteditable="true">내용을 입력하세요</span>
+                            </p>
+                          </div>
+                        </td>
+                        <td class="se-cell" style="width: 33.33%; height: 42px;">
+                          <div class="se-module se-module-text">
+                            <p class="se-text-paragraph se-text-paragraph-align-left" style="line-height: 1.6;">
+                              <span class="se-ff-nanumgothic se-fs15" style="color: rgb(0, 0, 0);" contenteditable="true">내용을 입력하세요</span>
+                            </p>
+                          </div>
+                        </td>
+                      </tr>
+                      <tr class="se-tr">
+                        <td class="se-cell" style="width: 33.33%; height: 42px;">
+                          <div class="se-module se-module-text">
+                            <p class="se-text-paragraph se-text-paragraph-align-left" style="line-height: 1.6;">
+                              <span class="se-ff-nanumgothic se-fs15" style="color: rgb(0, 0, 0);" contenteditable="true">내용을 입력하세요</span>
+                            </p>
+                          </div>
+                        </td>
+                        <td class="se-cell" style="width: 33.33%; height: 42px;">
+                          <div class="se-module se-module-text">
+                            <p class="se-text-paragraph se-text-paragraph-align-left" style="line-height: 1.6;">
+                              <span class="se-ff-nanumgothic se-fs15" style="color: rgb(0, 0, 0);" contenteditable="true">내용을 입력하세요</span>
+                            </p>
+                          </div>
+                        </td>
+                        <td class="se-cell" style="width: 33.33%; height: 42px;">
+                          <div class="se-module se-module-text">
+                            <p class="se-text-paragraph se-text-paragraph-align-left" style="line-height: 1.6;">
+                              <span class="se-ff-nanumgothic se-fs15" style="color: rgb(0, 0, 0);" contenteditable="true">내용을 입력하세요</span>
+                            </p>
+                          </div>
+                        </td>
+                      </tr>
+                      <tr class="se-tr">
+                        <td class="se-cell" style="width: 33.33%; height: 42px;">
+                          <div class="se-module se-module-text">
+                            <p class="se-text-paragraph se-text-paragraph-align-left" style="line-height: 1.6;">
+                              <span class="se-ff-nanumgothic se-fs15" style="color: rgb(0, 0, 0);" contenteditable="true">내용을 입력하세요</span>
+                            </p>
+                          </div>
+                        </td>
+                        <td class="se-cell" style="width: 33.33%; height: 42px;">
+                          <div class="se-module se-module-text">
+                            <p class="se-text-paragraph se-text-paragraph-align-left" style="line-height: 1.6;">
+                              <span class="se-ff-nanumgothic se-fs15" style="color: rgb(0, 0, 0);" contenteditable="true">내용을 입력하세요</span>
+                            </p>
+                          </div>
+                        </td>
+                        <td class="se-cell" style="width: 33.33%; height: 42px;">
+                          <div class="se-module se-module-text">
+                            <p class="se-text-paragraph se-text-paragraph-align-left" style="line-height: 1.6;">
+                              <span class="se-ff-nanumgothic se-fs15" style="color: rgb(0, 0, 0);" contenteditable="true">내용을 입력하세요</span>
+                            </p>
+                          </div>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+        
+        insertAtCursor(tableHtml);
+        saveState();
+      });
+      
+      // 장소 추가 기능
+      document.getElementById('btn-map').addEventListener('click', function() {
+        const mapHtml = `
+          <div class="se-component se-placesMap se-l-default" data-a11y-title="장소">
+            <div class="se-component-content">
+              <div class="se-section se-section-placesMap se-l-default se-section-align-left">
+                <div class="se-module se-module-map-image">
+                  <img src="https://simg.pstatic.net/static.map/v2/map/staticmap.bin?caller=smarteditor&markers=type%3Ad%7CviewSizeRatio%3A0.7%7Cpos%3A127.0302765%2037.505287%7Csize%3Amid%7Ccolor%3A0x11cc73&w=700&h=315&scale=2&dataversion=174.08" class="se-map-image">
+                </div>
+                <div class="se-module se-module-map-text">
+                  <div class="se-map-info">
+                    <strong class="se-map-title" contenteditable="true">장소 이름</strong>
+                    <p class="se-map-address" contenteditable="true">서울특별시 강남구 테헤란로 123</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+        
+        insertAtCursor(mapHtml);
+        saveState();
+      });
+      
+      // 일정 추가 기능
+      document.getElementById('btn-schedule').addEventListener('click', function() {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = now.getMonth() + 1;
+        const day = now.getDate();
+        const hours = now.getHours();
+        const minutes = now.getMinutes();
+        
+        const ampm = hours >= 12 ? '오후' : '오전';
+        const displayHours = hours % 12 || 12;
+        const displayMinutes = minutes < 10 ? `0${minutes}` : minutes;
+        
+        const scheduleHtml = `
+          <div class="se-component se-schedule se-l-default" data-a11y-title="일정">
+            <div class="se-component-content">
+              <div class="se-section se-section-schedule se-l-default se-section-align-left se-section-schedule-expended">
+                <div class="se-module se-module-schedule">
+                  <div class="se-schedule-header">
+                    <div class="se-schedule-summary">
+                      <p class="se-schedule-title">
+                        <strong class="se-schedule-title-text" contenteditable="true">일정 제목</strong>
+                      </p>
+                      <p class="se-schedule-duration se-schedule-duration-start">${year}.${month}.${day}.(${['일', '월', '화', '수', '목', '금', '토'][now.getDay()]}) ${ampm} ${displayHours}:${displayMinutes}</p>
+                    </div>
+                    <div class="se-schedule-date-container">
+                      <p class="se-schedule-date">
+                        <span class="se-schedule-month se-schedule-month-number">${month}</span>
+                        <span class="se-schedule-month se-schedule-month-text">월</span>
+                        <span class="se-schedule-day">${day}</span>
+                      </p>
+                    </div>
+                  </div>
+                  <div class="se-schedule-content">
+                    <div class="se-schedule-info-map">
+                      <div class="se-module se-module-map-image">
+                        <img src="https://simg.pstatic.net/static.map/v2/map/staticmap.bin?caller=smarteditor&markers=type%3Ad%7CviewSizeRatio%3A0.7%7Cpos%3A126.9128608%2037.5546667%7Csize%3Amid%7Ccolor%3A0x11cc73&w=700&h=315&scale=2&dataversion=174.08" class="se-map-image">
+                      </div>
+                    </div>
+                    <dl class="se-schedule-detail se-schedule-detail-location">
+                      <dt class="se-schedule-info-title">장소</dt>
+                      <dd class="se-schedule-info">
+                        <div class="se-module se-module-map-text">
+                          <div class="se-map-info">
+                            <strong class="se-map-title" contenteditable="true">장소 이름</strong>
+                            <p class="se-map-address" contenteditable="true">서울특별시 마포구 동교로 123</p>
+                          </div>
+                        </div>
+                      </dd>
+                    </dl>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+        
+        insertAtCursor(scheduleHtml);
+        saveState();
+      });
+      
+      // 링크 추가 기능
+      document.getElementById('btn-link').addEventListener('click', function() {
+        const url = prompt('링크 URL을 입력하세요:', 'https://');
+        
+        if (url) {
+          const selection = window.getSelection();
+          
+          if (selection.rangeCount > 0) {
+            const selectedText = selection.toString();
+            const linkText = selectedText || url;
+            
+            // 링크 생성
+            document.execCommand('createLink', false, url);
+            
+            // 링크에 스타일 적용
+            const range = selection.getRangeAt(0);
+            const linkElement = range.commonAncestorContainer.parentElement;
+            
+            if (linkElement.tagName === 'A') {
+              linkElement.style.color = '#0078ff';
+              linkElement.style.textDecoration = 'underline';
+              linkElement.target = '_blank';
+              saveState();
+            }
+          } else {
+            // 선택 영역이 없으면 새 링크 만들기
+            const linkHtml = `<a href="${url}" target="_blank" style="color: #0078ff; text-decoration: underline;">${url}</a>`;
+            insertAtCursor(linkHtml);
+            saveState();
+          }
+        }
+      });
+      
+      // 이미지 버튼 이벤트
+      document.getElementById('btn-image').addEventListener('click', function() {
+        openImageUploadModal();
+      });
+      
+      // 에디터 클릭 이벤트
+      editor.addEventListener('click', function(e) {
+        // 대표 이미지 버튼 클릭
+        if (e.target.classList.contains('se-set-rep-image-button')) {
+          e.preventDefault();
+          e.stopPropagation();
+          
+          // 모든 기존 대표 이미지 표시 제거
+          document.querySelectorAll('.se-is-rep-image').forEach(el => {
+            el.classList.remove('se-is-rep-image');
+          });
+          
+          // 현재 이미지를 대표 이미지로 설정
+          const imageModule = e.target.closest('.se-module-image');
+          imageModule.classList.add('se-is-rep-image');
+          
+          showStatus('대표 이미지로 설정되었습니다');
+          saveState();
+        }
+        
+        // 이미지 삭제 버튼 클릭
+        if (e.target.classList.contains('se-image-delete-button')) {
+          e.preventDefault();
+          e.stopPropagation();
+          
+          const component = e.target.closest('.se-component');
+          component.remove();
+          
+          showStatus('이미지가 삭제되었습니다');
+          saveState();
+        }
+      });
+      
+      // 커서 위치에 HTML 삽입 함수
+      function insertAtCursor(html) {
+        const selection = window.getSelection();
+        
+        if (selection.rangeCount) {
+          const range = selection.getRangeAt(0);
+          range.deleteContents();
+          
+          const fragment = document.createRange().createContextualFragment(html);
+          const lastNode = fragment.lastChild;
+          
+          range.insertNode(fragment);
+          
+          if (lastNode) {
+            range.setStartAfter(lastNode);
+            range.collapse(true);
+            selection.removeAllRanges();
+            selection.addRange(range);
+          }
+        } else {
+          editor.insertAdjacentHTML('beforeend', html);
+        }
+      }
+      
+      // 버튼 이벤트 설정
+      document.getElementById('btn-bold').addEventListener('click', function() {
+        document.execCommand('bold', false, null);
+        saveState();
+      });
+      
+      document.getElementById('btn-italic').addEventListener('click', function() {
+        document.execCommand('italic', false, null);
+        saveState();
+      });
+      
+      document.getElementById('btn-underline').addEventListener('click', function() {
+        document.execCommand('underline', false, null);
+        saveState();
+      });
+      
+      document.getElementById('btn-strike').addEventListener('click', function() {
+        document.execCommand('strikethrough', false, null);
+        saveState();
+      });
+      
+      document.getElementById('btn-undo').addEventListener('click', undo);
+      document.getElementById('btn-redo').addEventListener('click', redo);
+      
+      // 문서 로드 시 초기 상태 저장
+      saveState();
+      
+      // 툴팁 표시를 위한 코드
+      document.querySelectorAll('.se-toolbar-button').forEach(button => {
+        button.addEventListener('mouseenter', function() {
+          const tooltip = this.querySelector('.se-toolbar-tooltip');
+          if (tooltip) {
+            tooltip.style.display = 'block';
+          }
+        });
+        
+        button.addEventListener('mouseleave', function() {
+          const tooltip = this.querySelector('.se-toolbar-tooltip');
+          if (tooltip) {
+            tooltip.style.display = 'none';
+          }
+        });
+      });
+      
+      // 모바일 화면에서 에디터 높이 조정
+      function adjustEditorHeight() {
+        if (window.innerWidth < 768) {
+          editor.style.minHeight = '300px';
+        } else {
+          editor.style.minHeight = '500px';
+        }
+      }
+      
+      window.addEventListener('resize', adjustEditorHeight);
+      adjustEditorHeight();
+    });
+  </script>
+</body>
+</html>
