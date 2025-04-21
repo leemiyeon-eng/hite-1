@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>저장된 원고 보기</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 30px;
+      background: #f9f9f9;
+      color: #333;
+    }
+    h1 {
+      color: #4e90fe;
+      margin-bottom: 20px;
+    }
+    .item {
+      margin-bottom: 12px;
+    }
+    .item span {
+      display: inline-block;
+      min-width: 150px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h1>최신 저장된 원고</h1>
+  <div id="output">불러오는 중...</div>
+
+  <script>
+    fetch('https://lkiwoxxtpgwrtiepkxeo.supabase.co/rest/v1/form_data?order=created_at.desc&limit=1', {
+      headers: {
+        'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxraXdveHh0cGd3cnRpZXBreGVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUyNDUwNTgsImV4cCI6MjA2MDgyMTA1OH0.tnxWry-1DYSBIozgWeg8JCjqAHhyMFI07t57kIZWRgY',
+      }
+    })
+    .then(res => res.json())
+    .then(data => {
+      const output = document.getElementById('output');
+      output.innerHTML = '';
+
+      if (data.length === 0) {
+        output.innerText = '저장된 데이터가 아직 없습니다.';
+        return;
+      }
+
+      const latest = data[0].data;
+      for (const key in latest) {
+        const div = document.createElement('div');
+        div.className = 'item';
+        div.innerHTML = `<span>${key}</span>: ${latest[key]}`;
+        output.appendChild(div);
+      }
+    })
+    .catch(error => {
+      document.getElementById('output').innerText = '불러오기 실패: ' + error;
+    });
+  </script>
+</body>
+</html>
