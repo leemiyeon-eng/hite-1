@@ -3,65 +3,24 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>저장된 원고 보기</title>
+  <!-- 변경된 타이틀 -->
+  <title>저장된 원고 상세 보기</title>
   <style>
-    body {
-      font-family: sans-serif;
-      padding: 20px;
-      background: #f9f9f9;
-      color: #333;
-      line-height: 1.6;
-    }
-    h1 {
-      color: #4e90fe;
-      margin-bottom: 25px;
-      border-bottom: 2px solid #4e90fe;
-      padding-bottom: 10px;
-    }
-    .data-container {
-      background-color: #fff;
-      padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    }
-    .item {
-      margin-bottom: 15px;
-      padding-bottom: 15px;
-      border-bottom: 1px solid #eee;
-    }
-    .item:last-child {
-      margin-bottom: 0;
-      padding-bottom: 0;
-      border-bottom: none;
-    }
-    .item-key {
-      display: block; /* Make key appear on its own line */
-      font-weight: bold;
-      color: #333;
-      margin-bottom: 5px; /* Add space between key and value */
-    }
-    .item-value {
-       display: block; /* Ensure value is block level */
-       white-space: pre-wrap; /* Preserve whitespace and wrap text */
-       word-wrap: break-word; /* Break long words */
-       background-color: #f5f5f5; /* Slight background for value */
-       padding: 8px;
-       border-radius: 4px;
-       border: 1px solid #ddd;
-    }
-    #output {
-        min-height: 50px; /* Prevent collapsing while loading */
-    }
-    .loading, .error, .no-data {
-        color: #777;
-        font-style: italic;
-        text-align: center;
-        padding: 20px;
-    }
+    /* 스타일은 이전과 동일하게 유지 */
+    body { font-family: sans-serif; padding: 20px; background: #f9f9f9; color: #333; line-height: 1.6; }
+    h1 { color: #4e90fe; margin-bottom: 25px; border-bottom: 2px solid #4e90fe; padding-bottom: 10px; }
+    .data-container { background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+    .item { margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #eee; }
+    .item:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
+    .item-key { display: block; font-weight: bold; color: #333; margin-bottom: 5px; }
+    .item-value { display: block; white-space: pre-wrap; word-wrap: break-word; background-color: #f5f5f5; padding: 8px; border-radius: 4px; border: 1px solid #ddd; }
+    #output { min-height: 50px; }
+    .loading, .error, .no-data, .info { color: #777; font-style: italic; text-align: center; padding: 20px; }
   </style>
 </head>
 <body>
-  <h1>최신 저장된 원고 요청 사항</h1>
+  <!-- 변경된 제목 -->
+  <h1>저장된 원고 상세 내용</h1>
   <div id="output" class="loading">
     <p>데이터를 불러오는 중...</p>
   </div>
@@ -69,76 +28,92 @@
   <script>
     const outputDiv = document.getElementById('output');
     const supabaseUrl = 'https://lkiwoxxtpgwrtiepkxeo.supabase.co';
-    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxraXdveHh0cGd3cnRpZXBreGVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUyNDUwNTgsImV4cCI6MjA2MDgyMTA1OH0.tnxWry-1DYSBIozgWeg8JCjqAHhyMFI07t57kIZWRgY'; // Public Anon Key
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxraXdveHh0cGd3cnRpZXBreGVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUyNDUwNTgsImV4cCI6MjA2MDgyMTA1OH0.tnxWry-1DYSBIozgWeg8JCjqAHhyMFI07t57kIZWRgY';
 
-    async function loadLatestData() {
+    // --- 함수 이름 변경 및 로직 수정 ---
+    async function loadDataById() {
+        outputDiv.innerHTML = '<p class="loading">데이터를 불러오는 중...</p>';
+        outputDiv.className = 'loading';
+
+        // URL에서 'id' 파라미터 가져오기
+        const urlParams = new URLSearchParams(window.location.search);
+        const submissionId = urlParams.get('id');
+
+        if (!submissionId) {
+            outputDiv.innerHTML = '<p class="info">표시할 데이터 ID가 지정되지 않았습니다. 저장 후 생성된 링크로 접속해주세요.</p>';
+            outputDiv.className = 'info';
+            return;
+        }
+
+        console.log(`Fetching data for ID: ${submissionId}`); // ID 로깅
+
         try {
-            // Fetch the latest record (order by creation time descending, limit 1)
-            const response = await fetch(`${supabaseUrl}/rest/v1/form_data?select=data,created_at&order=created_at.desc&limit=1`, {
+            // 특정 ID에 해당하는 데이터만 요청 (id=eq.VALUE 형식 사용)
+            const response = await fetch(`${supabaseUrl}/rest/v1/form_data?select=data,created_at,id&id=eq.${submissionId}`, {
                 headers: {
-                'apikey': supabaseKey,
-                'Authorization': `Bearer ${supabaseKey}` // Standard practice
+                    'apikey': supabaseKey,
+                    'Authorization': `Bearer ${supabaseKey}`
                 }
             });
 
             if (!response.ok) {
-                throw new Error(`데이터 로딩 실패: ${response.status} ${response.statusText}`);
+                 let errorText = `데이터 로딩 실패: ${response.status} ${response.statusText}`;
+                 try { const errorJson = await response.json(); errorText += `. ${errorJson.message || ''}`; } catch (e) {}
+                 throw new Error(errorText);
             }
 
             const data = await response.json();
-            outputDiv.innerHTML = ''; // Clear loading message
+            outputDiv.innerHTML = '';
             outputDiv.classList.remove('loading');
 
-            if (!data || data.length === 0 || !data[0].data) {
-                outputDiv.innerHTML = '<p class="no-data">저장된 데이터가 아직 없습니다.</p>';
+            // --- 데이터 처리 수정 ---
+            if (!data || data.length === 0) {
+                outputDiv.innerHTML = `<p class="no-data">ID '${submissionId}'에 해당하는 데이터를 찾을 수 없습니다.</p>`;
                 outputDiv.classList.add('no-data');
                 return;
             }
 
-            const latestRecord = data[0];
-            const latestData = latestRecord.data; // Access the nested 'data' object
-            const createdAt = new Date(latestRecord.created_at).toLocaleString('ko-KR');
+            // 결과는 배열이므로 첫 번째 요소 사용
+            const record = data[0];
+            const recordData = record.data; // 실제 저장된 내용 객체
+            const createdAt = new Date(record.created_at).toLocaleString('ko-KR');
+            const recordId = record.id; // ID도 표시 (선택 사항)
 
             const dataContainer = document.createElement('div');
             dataContainer.className = 'data-container';
 
-             const titleElement = document.createElement('p');
-             titleElement.innerHTML = `<strong>저장 시각:</strong> ${createdAt}`;
-             titleElement.style.marginBottom = '20px';
-             titleElement.style.fontSize = '0.9em';
-             titleElement.style.color = '#555';
-             dataContainer.appendChild(titleElement);
+            // 저장 시각 및 ID 표시
+            const metaElement = document.createElement('p');
+            metaElement.innerHTML = `<strong>저장 시각:</strong> ${createdAt}<br><strong>고유 ID:</strong> ${recordId}`;
+            metaElement.style.marginBottom = '20px';
+            metaElement.style.fontSize = '0.9em';
+            metaElement.style.color = '#555';
+            metaElement.style.wordBreak = 'break-all'; // 긴 ID 줄바꿈
+            dataContainer.appendChild(metaElement);
 
+            // 저장된 데이터 내용 표시 (순서 지정 등 이전 로직 활용)
+            const displayOrder = ['원고료', '오픈 일정', '광고주', '기타 요청', '제품 및 서비스 소개', '가이드 라인', '필수 키워드 및 해시태그'];
+            const dataMap = new Map(Object.entries(recordData));
 
-            // Define a preferred order for display (optional)
-            const displayOrder = [
-                '원고료', '오픈 일정', '광고주', '기타 요청',
-                '제품 및 서비스 소개', '가이드 라인', '필수 키워드 및 해시태그'
-            ];
-
-            // Create a map of the data for easier lookup
-            const dataMap = new Map(Object.entries(latestData));
-
-            // Display items in preferred order
             displayOrder.forEach(key => {
                 if (dataMap.has(key)) {
                     const value = dataMap.get(key);
                     const itemDiv = document.createElement('div');
                     itemDiv.className = 'item';
-                    itemDiv.innerHTML = `<span class="item-key">${key}</span><span class="item-value">${value || '(내용 없음)'}</span>`; // Handle empty values
+                    const keySpan = document.createElement('span'); keySpan.className = 'item-key'; keySpan.textContent = key;
+                    const valueSpan = document.createElement('span'); valueSpan.className = 'item-value'; valueSpan.textContent = value || '(내용 없음)';
+                    itemDiv.appendChild(keySpan); itemDiv.appendChild(valueSpan);
                     dataContainer.appendChild(itemDiv);
-                    dataMap.delete(key); // Remove from map after displaying
+                    dataMap.delete(key);
                 }
             });
-
-            // Display any remaining items that were not in the preferred order
             dataMap.forEach((value, key) => {
-                 const itemDiv = document.createElement('div');
-                 itemDiv.className = 'item';
-                 itemDiv.innerHTML = `<span class="item-key">${key}</span><span class="item-value">${value || '(내용 없음)'}</span>`;
+                 const itemDiv = document.createElement('div'); itemDiv.className = 'item';
+                 const keySpan = document.createElement('span'); keySpan.className = 'item-key'; keySpan.textContent = key;
+                 const valueSpan = document.createElement('span'); valueSpan.className = 'item-value'; valueSpan.textContent = value || '(내용 없음)';
+                 itemDiv.appendChild(keySpan); itemDiv.appendChild(valueSpan);
                  dataContainer.appendChild(itemDiv);
             });
-
 
             outputDiv.appendChild(dataContainer);
 
@@ -150,8 +125,9 @@
         }
     }
 
-    // Load data when the page loads
-    loadLatestData();
+    // 페이지 로드 시 함수 실행
+    loadDataById();
+    // --- 여기까지 수정 ---
 
   </script>
 </body>
