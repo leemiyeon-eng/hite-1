@@ -2,132 +2,45 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>네이버 블로그 글쓰기 클론</title>
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/all.min.css">
+  <title>블로그 에디터 2단 뷰</title>
   <style>
-    body { font-family: 'Nanum Gothic', 'Malgun Gothic', sans-serif; }
-    .post-title { width: 100%; font-size: 2rem; font-weight: bold; border: none; outline: none; padding: 15px 0; border-bottom: 2px solid #ccc; margin-bottom: 20px; }
-    .editor-container { border: 1px solid #ddd; background: white; padding: 20px; border-radius: 6px; min-height: 400px; line-height: 1.8; font-size: 16px; }
-    .toolbar-button { padding: 6px 10px; border: 1px solid #ddd; background: white; cursor: pointer; border-radius: 4px; }
-    .toolbar-button:hover { background: #f0f0f0; }
-    .active { background-color: #e5f3ff; border-color: #3399ff; }
-    .color-picker, .font-size { padding: 5px; border: 1px solid #ddd; border-radius: 4px; }
-
-    blockquote {
-      font-family: 'Nanum Myeongjo', serif;
-      font-style: italic;
-      color: #666;
-      font-size: 20px;
-      line-height: 1.8;
-      text-align: center;
-      margin: 2em 0;
-      padding: 0.5em 1em;
-      position: relative;
+    body {
+      margin: 0;
+      font-family: 'NanumGothic', sans-serif;
+      background-color: #f5f5f5;
     }
 
-    blockquote::before {
-      content: "“";
-      font-size: 40px;
-      color: #ccc;
-      position: absolute;
-      top: -10px;
-      left: 10px;
+    .editor-wrapper {
+      display: flex;
+      height: 100vh;
     }
 
-    blockquote::after {
-      content: "”";
-      font-size: 40px;
-      color: #ccc;
-      position: absolute;
-      bottom: -10px;
-      right: 10px;
+    .editor-panel {
+      flex: 1;
+      overflow-y: auto;
+      border-right: 1px solid #e0e0e0;
+      background-color: #fff;
+    }
+
+    .editor-panel:last-child {
+      border-right: none;
+    }
+
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
     }
   </style>
 </head>
-<body class="bg-gray-100 p-6">
-  <div class="max-w-4xl mx-auto">
-    <input type="text" id="post-title" class="post-title" placeholder="제목을 입력하세요" />
-
-    <div class="mb-4 flex flex-wrap gap-2 items-center">
-      <button class="toolbar-button" onclick="execCmd('bold')"><i class="fas fa-bold"></i></button>
-      <button class="toolbar-button" onclick="execCmd('italic')"><i class="fas fa-italic"></i></button>
-      <button class="toolbar-button" onclick="execCmd('underline')"><i class="fas fa-underline"></i></button>
-      <button class="toolbar-button" onclick="execCmd('strikeThrough')"><i class="fas fa-strikethrough"></i></button>
-      <button class="toolbar-button" onclick="execCmd('justifyLeft')"><i class="fas fa-align-left"></i></button>
-      <button class="toolbar-button" onclick="execCmd('justifyCenter')"><i class="fas fa-align-center"></i></button>
-      <button class="toolbar-button" onclick="execCmd('justifyRight')"><i class="fas fa-align-right"></i></button>
-      <input type="color" id="colorPicker" class="color-picker" title="글자 색상 선택" onchange="changeColor(this.value)" />
-      <select id="fontSize" class="font-size" onchange="changeFontSize(this.value)">
-        <option value="">크기</option>
-        <option value="1">10px</option>
-        <option value="2">13px</option>
-        <option value="3">16px</option>
-        <option value="4">18px</option>
-        <option value="5">24px</option>
-        <option value="6">32px</option>
-        <option value="7">48px</option>
-      </select>
-      <button class="toolbar-button" onclick="insertImage()"><i class="fas fa-image"></i></button>
-      <button class="toolbar-button" onclick="insertQuote()">“” 인용</button>
-      <button class="toolbar-button" onclick="insertHr()">― 구분선</button>
+<body>
+  <div class="editor-wrapper">
+    <div class="editor-panel">
+      <iframe src="블로그포스팅클론_테스트1.html" title="좌측 에디터"></iframe>
     </div>
-
-    <div class="editor-container" id="editor" contenteditable="true">
-      <p>여기에 글을 작성하세요...</p>
-    </div>
-
-    <div class="mt-6 flex justify-end gap-2">
-      <button onclick="savePost()" class="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded">임시저장</button>
-      <button onclick="alert('게시되었습니다!')" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded">게시하기</button>
+    <div class="editor-panel">
+      <iframe src="블로그포스팅클론_테스트1.html" title="우측 에디터"></iframe>
     </div>
   </div>
-
-  <script>
-    function execCmd(cmd) {
-      document.execCommand(cmd, false, null);
-    }
-
-    function changeColor(color) {
-      document.execCommand("foreColor", false, color);
-    }
-
-    function changeFontSize(size) {
-      document.execCommand("fontSize", false, size);
-    }
-
-    function insertImage() {
-      const url = prompt("이미지 URL을 입력하세요:");
-      if (url) {
-        document.execCommand("insertImage", false, url);
-      }
-    }
-
-    function insertQuote() {
-      const quote = prompt("인용할 내용을 입력하세요:");
-      if (quote) {
-        document.execCommand("insertHTML", false, `<blockquote>${quote}</blockquote>`);
-      }
-    }
-
-    function insertHr() {
-      document.execCommand("insertHorizontalRule", false, null);
-    }
-
-    function savePost() {
-      const title = document.getElementById("post-title").value;
-      const content = document.getElementById("editor").innerHTML;
-      const blob = new Blob([`<h1>${title}</h1>` + content], { type: "text/html" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "blog_post.html";
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    }
-  </script>
 </body>
 </html>
