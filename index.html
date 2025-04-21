@@ -14,6 +14,10 @@
       background: white;
       border-left: 1px solid #ddd;
     }
+    /* Add border to the very first panel */
+    .container > .editor-panel:first-child {
+       border-left: none;
+    }
     .panel-title {
       padding: 16px;
       font-weight: bold;
@@ -23,31 +27,41 @@
       border-bottom: 1px solid #ddd;
     }
     .toolbar { display: flex; gap: 8px; padding: 8px; background: #fafafa; border-bottom: 1px solid #ddd; }
-    .toolbar button { font-size: 18px; cursor: pointer; }
+    .toolbar button { font-size: 18px; cursor: pointer; background: none; border: none; padding: 4px 8px; }
+    .toolbar button:hover { background: #eee; }
     .content-area { flex: 1; overflow-y: auto; padding: 16px; }
     .section { margin-bottom: 24px; }
     .section h3 { margin-bottom: 8px; font-size: 16px; border-left: 4px solid #4e90fe; padding-left: 8px; }
-    .section-content { background: #f5f5f5; border: 1px solid #ccc; padding: 12px; border-radius: 6px; }
+    .section-content { background: #f5f5f5; border: 1px solid #ccc; padding: 12px; border-radius: 6px; min-height: 50px; } /* Added min-height */
     .inline-fields { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; }
-    .field { display: flex; background: #e8f0fe; border: 1px solid #bdd4fd; border-radius: 6px; padding: 8px; }
-    .field-label { font-weight: bold; margin-right: 6px; }
-    .field-value { min-width: 80px; }
-    .field-value[contenteditable]:focus { outline: 2px solid #4e90fe; }
+    .field { display: flex; align-items: center; /* Vertically align items */ background: #e8f0fe; border: 1px solid #bdd4fd; border-radius: 6px; padding: 8px; }
+    .field-label { font-weight: bold; margin-right: 6px; white-space: nowrap; /* Prevent label wrapping */ }
+    .field-value { min-width: 80px; flex-grow: 1; /* Allow value to take space */ }
+    .field-value[contenteditable]:focus { outline: 2px solid #4e90fe; background: white; } /* Highlight on focus */
+    .section-content[contenteditable]:focus { outline: 2px solid #4e90fe; background: white; } /* Highlight on focus */
+
     #save-button {
       position: fixed; bottom: 20px; left: 20px;
       background: #4e90fe; color: white; border: none; border-radius: 6px;
       padding: 10px 20px; font-size: 16px; cursor: pointer; z-index: 1000;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+    #save-button:hover {
+       background: #3a7bd5;
     }
   </style>
 </head>
 <body>
 
 <div class="container">
-  <!-- 좌측 -->
+  <!-- 좌측: 원고 요청 사항 (Data Source) -->
   <div class="editor-panel" id="left-editor">
     <div class="panel-title">원고 요청 사항</div>
     <div class="toolbar">
-      <button>📷</button><button>📁</button><button>🎥</button><button>😊</button>
+      <button title="Insert Image">📷</button>
+      <button title="Attach File">📁</button>
+      <button title="Insert Video">🎥</button>
+      <button title="Insert Emoji">😊</button>
     </div>
     <div class="content-area">
       <div class="section">
@@ -61,28 +75,32 @@
       </div>
       <div class="section">
         <h3>제품 및 서비스 소개</h3>
-        <div contenteditable="true" class="section-content">여기에 내용을 입력하세요.</div>
+        <div contenteditable="true" class="section-content">여기에 제품 또는 서비스에 대한 상세 설명을 입력하세요. 특징, 장점, 타겟 고객 등을 포함할 수 있습니다.</div>
       </div>
       <div class="section">
         <h3>가이드 라인</h3>
-        <div contenteditable="true" class="section-content">가이드를 작성하세요.</div>
+        <div contenteditable="true" class="section-content">블로거가 지켜야 할 가이드라인을 작성하세요. 예를 들어, 반드시 포함해야 할 문구, 피해야 할 표현, 사진 촬영 스타일, 톤앤매너 등을 명시할 수 있습니다.</div>
       </div>
       <div class="section">
         <h3>필수 키워드 및 해시태그</h3>
-        <div contenteditable="true" class="section-content">키워드를 입력하세요.</div>
+        <div contenteditable="true" class="section-content">#필수키워드1, #필수키워드2, #브랜드명, #제품명 등 검색 노출 및 캠페인 트래킹에 필요한 키워드와 해시태그를 입력하세요.</div>
       </div>
     </div>
   </div>
 
-  <!-- 우측 -->
+  <!-- 우측: 블로그 원고 초안 (Not Saved) -->
   <div class="editor-panel">
-    <div class="panel-title">블로그 원고 초안</div>
+    <div class="panel-title">블로그 원고 초안 (참고용)</div>
     <div class="toolbar">
-      <button>📷</button><button>📁</button><button>🎥</button><button>😊</button>
+       <button title="Insert Image">📷</button>
+       <button title="Attach File">📁</button>
+       <button title="Insert Video">🎥</button>
+       <button title="Insert Emoji">😊</button>
     </div>
     <div class="content-area">
+       <p style="color: #666; font-style: italic;">이 영역은 블로거가 작성할 원고 초안을 위한 공간이며, '저장' 버튼 클릭 시 이 패널의 내용은 저장되지 않습니다.</p>
       <div class="section">
-        <h3>입금 정보</h3>
+        <h3>입금 정보 (블로거 작성)</h3>
         <div class="inline-fields">
           <div class="field"><span class="field-label">은행명</span><span contenteditable="true" class="field-value">국민은행</span></div>
           <div class="field"><span class="field-label">계좌번호</span><span contenteditable="true" class="field-value">123-456-7890</span></div>
@@ -90,6 +108,10 @@
           <div class="field"><span class="field-label">포스팅 링크</span><span contenteditable="true" class="field-value">https://blog.naver.com/주소</span></div>
         </div>
       </div>
+       <div class="section">
+          <h3>원고 내용 (블로거 작성)</h3>
+          <div contenteditable="true" class="section-content" style="min-height: 200px;">블로거가 원고 초안을 작성하는 공간입니다. 왼쪽 패널의 요청 사항을 참고하여 작성합니다.</div>
+       </div>
     </div>
   </div>
 </div>
@@ -100,33 +122,76 @@
 <!-- Supabase 저장 스크립트 -->
 <script>
 async function saveData() {
-  const data = {};
-  const editor = document.querySelector('#left-editor');
+  const dataToSave = {}; // Use a different variable name to avoid confusion
+  const editor = document.querySelector('#left-editor'); // Target only the left editor
 
-  editor.querySelectorAll('.field').forEach(field => {
-    const label = field.querySelector('.field-label')?.innerText.trim();
-    const value = field.querySelector('.field-value')?.innerText.trim();
-    if (label) data[label] = value;
-  });
+  // Get data from inline fields in the "요청 정보" section
+  const requestInfoSection = editor.querySelector('.section:first-of-type'); // More specific selector
+  if (requestInfoSection && requestInfoSection.querySelector('h3')?.innerText.trim() === '요청 정보') {
+      requestInfoSection.querySelectorAll('.field').forEach(field => {
+        const label = field.querySelector('.field-label')?.innerText.trim();
+        // Use textContent for contenteditable elements to get plain text
+        const value = field.querySelector('.field-value')?.textContent.trim();
+        if (label) {
+            dataToSave[label] = value;
+        }
+      });
+  }
 
+
+  // Get data from the content sections
   editor.querySelectorAll('.section').forEach(section => {
     const title = section.querySelector('h3')?.innerText.trim();
-    const content = section.querySelector('.section-content')?.innerText.trim();
-    if (title && content) data[title] = content;
+    // Use textContent for contenteditable elements to get plain text
+    const contentElement = section.querySelector('.section-content');
+    const content = contentElement?.textContent.trim();
+
+    // Only save sections with editable content areas (exclude "요청 정보" fields here)
+    if (title && contentElement && contentElement.hasAttribute('contenteditable')) {
+       dataToSave[title] = content;
+    }
   });
 
-  const res = await fetch('https://lkiwoxxtpgwrtiepkxeo.supabase.co/rest/v1/form_data', {
-    method: 'POST',
-    headers: {
-      'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxraXdveHh0cGd3cnRpZXBreGVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUyNDUwNTgsImV4cCI6MjA2MDgyMTA1OH0.tnxWry-1DYSBIozgWeg8JCjqAHhyMFI07t57kIZWRgY',
-      'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxraXdveHh0cGd3cnRpZXBreGVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUyNDUwNTgsImV4cCI6MjA2MDgyMTA1OH0.tnxWry-1DYSBIozgWeg8JCjqAHhyMFI07t57kIZWRgY',
-      'Content-Type': 'application/json',
-      'Prefer': 'return=representation'
-    },
-    body: JSON.stringify({ data })
-  });
+  console.log("Data to save:", dataToSave); // Log data before sending
 
-  alert("Supabase에 저장 완료!");
+  const saveButton = document.getElementById('save-button');
+  saveButton.disabled = true;
+  saveButton.innerText = '저장 중...';
+
+  try {
+      const response = await fetch('https://lkiwoxxtpgwrtiepkxeo.supabase.co/rest/v1/form_data', {
+        method: 'POST',
+        headers: {
+          // Use the public anonymous key for Supabase
+          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxraXdveHh0cGd3cnRpZXBreGVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUyNDUwNTgsImV4cCI6MjA2MDgyMTA1OH0.tnxWry-1DYSBIozgWeg8JCjqAHhyMFI07t57kIZWRgY',
+          // The Authorization header often uses the same anon key for client-side access
+          'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxraXdveHh0cGd3cnRpZXBreGVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUyNDUwNTgsImV4cCI6MjA2MDgyMTA1OH0.tnxWry-1DYSBIozgWeg8JCjqAHhyMFI07t57kIZWRgY',
+          'Content-Type': 'application/json',
+          'Prefer': 'return=minimal' // Or 'representation' if you want the saved data back
+        },
+        // IMPORTANT: Structure the body { "data": dataToSave }
+        // This ensures the object `dataToSave` is stored within the 'data' column (assuming it's JSONB)
+        body: JSON.stringify({ data: dataToSave })
+      });
+
+      if (!response.ok) {
+          // Try to get more error details from Supabase response
+          const errorData = await response.json();
+          console.error("Supabase error details:", errorData);
+          throw new Error(`Supabase 저장 실패: ${response.status} ${response.statusText}. ${errorData.message || ''}`);
+      }
+
+      // const result = await response.json(); // Only needed if Prefer=representation
+      // console.log("Save result:", result);
+      alert("왼쪽 패널의 내용이 Supabase에 저장 완료!");
+
+  } catch (error) {
+      console.error("저장 중 오류 발생:", error);
+      alert(`저장 실패: ${error.message}`);
+  } finally {
+      saveButton.disabled = false;
+      saveButton.innerText = '💾 저장';
+  }
 }
 </script>
 </body>
